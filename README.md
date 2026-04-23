@@ -80,21 +80,6 @@ Para ejecutar las pruebas:
 cargo test
 ```
 
-## Cómo publicar en Crates.io
-
-1. **Crea una cuenta** en [crates.io](https://crates.io) y obtén tu API token.
-2. **Inicia sesión** en tu terminal:
-   ```bash
-   cargo login <tu_token>
-   ```
-3. **Verifica el paquete**: Asegúrate de que todo esté en orden y pase los tests.
-   ```bash
-   cargo package
-   ```
-4. **Publica**:
-   ```bash
-   cargo publish
-   ```
 
 ---
 
