@@ -10,6 +10,6 @@ impl QvaPayClient {
 
     /// Obtiene la información de la aplicación registrada.
     pub async fn get_info(&self) -> Result<InfoMerchant, SdkError> {
-        self.get("/v1/info").await
+        self.get("/info").await
     }
 }

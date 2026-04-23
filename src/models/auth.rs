@@ -1,5 +1,10 @@
 use serde::{Deserialize, Serialize};
 
+pub struct MerchantSecret {
+    pub app_id: String,
+    pub app_secret: String,
+}
+
 /// Request for login operation.
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AuthLoginRequest {

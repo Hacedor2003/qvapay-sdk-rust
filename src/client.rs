@@ -1,6 +1,9 @@
+use crate::{
+    error::{ApiErrorResponse, SdkError},
+    models::MerchantSecret,
+};
 use reqwest::{Client as HttpClient, Method};
 use serde::{de::DeserializeOwned, Serialize};
-use crate::error::{SdkError, ApiErrorResponse};
 
 #[derive(Debug, Clone)]
 pub enum Environment {
@@ -20,28 +23,59 @@ impl Environment {
 }
 
 pub struct QvaPayClient {
-    api_key: String,
+    key_user: Option<String>,
+    key_merchant: Option<MerchantSecret>,
     base_url: String,
     http_client: HttpClient,
 }
 
 impl QvaPayClient {
-    pub fn new(api_key: String, environment: Environment) -> Self {
+    pub fn new(environment: Environment) -> Self {
         Self {
-            api_key,
+            key_user: None,
+            key_merchant: None,
             base_url: environment.base_url().to_string(),
             http_client: HttpClient::new(),
         }
     }
 
-    pub(crate) async fn request<T, R>(&self, method: Method, path: &str, body: Option<&T>) -> Result<R, SdkError>
+    pub fn initialize_merchant(environment: Environment, secret: MerchantSecret) -> Self {
+        Self {
+            key_user: None,
+            key_merchant: Some(secret), 
+            base_url: environment.base_url().to_string(),
+            http_client: HttpClient::new(),
+        }
+    }
+
+    pub fn initialize_user(environment: Environment, secret: String) -> Self {
+        Self {
+            key_user: Some(secret),
+            key_merchant: None, 
+            base_url: environment.base_url().to_string(),
+            http_client: HttpClient::new(),
+        }
+    }
+
+    pub(crate) async fn request<T, R>(
+        &self,
+        method: Method,
+        path: &str,
+        body: Option<&T>,
+    ) -> Result<R, SdkError>
     where
         T: Serialize + ?Sized,
         R: DeserializeOwned,
     {
         let url = format!("{}{}", self.base_url, path);
-        let mut rb = self.http_client.request(method, &url)
-            .header("X-API-Key", &self.api_key);
+        let mut rb = self.http_client.request(method, &url);
+        if let Some(key_user) = &self.key_user {
+            rb = rb.header("Authorization", format!("Bearer {}", key_user));
+        } else if let Some(merchant) = &self.key_merchant {
+            rb = rb
+                .header("app-id", &merchant.app_id)
+                .header("app-secret", &merchant.app_secret);
+        }
 
         if let Some(b) = body {
             rb = rb.json(b);
@@ -54,8 +88,12 @@ impl QvaPayClient {
             Ok(response.json::<R>().await?)
         } else {
             let error_body = response.text().await.unwrap_or_default();
-            let message = if let Ok(api_err) = serde_json::from_str::<ApiErrorResponse>(&error_body) {
-                api_err.message.or(api_err.error).unwrap_or_else(|| "Unknown API error".to_string())
+            let message = if let Ok(api_err) = serde_json::from_str::<ApiErrorResponse>(&error_body)
+            {
+                api_err
+                    .message
+                    .or(api_err.error)
+                    .unwrap_or_else(|| "Unknown API error".to_string())
             } else {
                 error_body
             };

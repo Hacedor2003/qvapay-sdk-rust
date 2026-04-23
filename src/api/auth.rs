@@ -20,12 +20,12 @@ impl QvaPayClient {
     /// # }
     /// ```
     pub async fn login(&self, request: &AuthLoginRequest) -> Result<AuthLoginResponse, SdkError> {
-        self.post("/v1/auth/login", request).await
+        self.post("/auth/login", request).await
     }
 
     /// Registra un nuevo usuario en QvaPay.
     pub async fn register(&self, request: &AuthRegisterRequest) -> Result<GeneralMessageResponse, SdkError> {
-        self.post("/v1/auth/register", request).await
+        self.post("/auth/register", request).await
     }
 
     /// Verifica el email del usuario confirmando el PIN enviado durante el registro.

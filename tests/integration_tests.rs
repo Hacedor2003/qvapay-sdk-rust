@@ -24,7 +24,7 @@ async fn test_create_invoice_success() {
         .mount(&mock_server)
         .await;
 
-    let client = QvaPayClient::new("test_key".to_string(), Environment::Custom(mock_server.uri()));
+    let client = QvaPayClient::new(Environment::Custom(mock_server.uri()));
 
     let req = CreateInvoiceRequest {
         amount: 10.0,
@@ -53,7 +53,7 @@ async fn test_api_error_handling() {
         .mount(&mock_server)
         .await;
 
-    let client = QvaPayClient::new("wrong_key".to_string(), Environment::Custom(mock_server.uri()));
+    let client = QvaPayClient::new( Environment::Custom(mock_server.uri()));
 
     let result = client.get_balance().await;
 
